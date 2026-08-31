@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#DAE0E6] text-[#1C1C1C] transition-colors duration-200 antialiased font-sans;
+  }
+  
+  body.dark {
+    @apply bg-[#030303] text-[#D7DADC];
+  }
+
+  /* Custom premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full transition-colors;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-700;
+  }
+}
+
+/* Glassmorphism overrides to solid cards */
+.glass {
+  background: #FFFFFF;
+  border: 1px solid #EDEFF1;
+}
+
+.dark .glass {
+  background: #1A1A1B;
+  border: 1px solid #343536;
+}
+
+/* Glow effects replaced with subtle flat borders */
+.glow-primary {
+  box-shadow: none;
+  border: 1px solid #FF4500;
+}
+
+.glow-primary-hover:hover {
+  box-shadow: none;
+  border: 1px solid #FF4500;
+}
