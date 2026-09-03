@@ -5,8 +5,12 @@ const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 
 const swaggerSpec = require('./config/swagger');
+const connectDB = require('./config/db');
 const AppError = require('./utils/AppError');
 const errorHandler = require('./middleware/errorHandler');
+
+// Initialize database connection
+connectDB();
 
 // Route Imports
 const authRoutes = require('./routes/authRoutes');
