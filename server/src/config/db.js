@@ -1,31 +1,32 @@
-const dns = require('dns');
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ghostpost';
-  if (mongoUri.startsWith('mongodb+srv://')) {
-    try {
-      dns.setServers(['8.8.8.8', '1.1.1.1']);
-    } catch (e) {
-      // Fallback if setServers not supported
-    }
+  if (isConnected || mongoose.connection.readyState >= 1) {
+    return;
   }
 
+  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ghostpost';
+
   try {
-    const conn = await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
+    const conn = await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+    });
+    isConnected = true;
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.warn(`Primary MongoDB Connection failed (${error.message}).`);
-    console.log('Falling back to local MongoDB at mongodb://127.0.0.1:27017/ghostpost...');
-    try {
-      const localConn = await mongoose.connect('mongodb://127.0.0.1:27017/ghostpost');
-      console.log(`Local MongoDB Connected: ${localConn.connection.host}`);
-    } catch (fallbackError) {
-      console.error(`Database Connection Error: ${fallbackError.message}`);
-      process.exit(1);
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+      try {
+        const localConn = await mongoose.connect('mongodb://127.0.0.1:27017/ghostpost');
+        isConnected = true;
+        console.log(`Local MongoDB Connected: ${localConn.connection.host}`);
+      } catch (fallbackError) {
+        console.error(`Database Connection Error: ${fallbackError.message}`);
+      }
     }
   }
 };
 
 module.exports = connectDB;
-

@@ -9,9 +9,6 @@ const connectDB = require('./config/db');
 const AppError = require('./utils/AppError');
 const errorHandler = require('./middleware/errorHandler');
 
-// Initialize database connection
-connectDB();
-
 // Route Imports
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -21,6 +18,16 @@ const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
+
+// Database connection middleware for serverless execution
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Security Middlewares - Permitting Swagger UI inline scripts & styles
 app.use(
@@ -37,11 +44,11 @@ const allowedOrigins = [
 ];
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. curl, mobile apps, swagger ui)
+    // Allow requests with no origin (e.g. curl, mobile apps, swagger ui, same-origin SPA)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS: origin ${origin} not allowed`));
+      callback(null, true);
     }
   },
   credentials: true,
