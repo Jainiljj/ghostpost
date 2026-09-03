@@ -2,7 +2,7 @@
 
 GhostPost is a complete, production-quality anonymous, location-based, Reddit-style social discussion platform built using the MERN stack (MongoDB, Express, React, Node.js). 
 
-It features browser geolocation tracking, configurable geospatial queries (1km to 25km), coordinate privacy-masking rules, nested reply threads, Hot/New/Top sorting filters, and an admin moderation dashboard.
+It features browser geolocation tracking, configurable geospatial queries (1km to 25km), coordinate privacy-masking rules, nested reply threads, Hot/New/Top sorting filters, an admin moderation dashboard, and interactive **Swagger / OpenAPI 3.0** API documentation.
 
 ---
 
@@ -17,13 +17,14 @@ It features browser geolocation tracking, configurable geospatial queries (1km t
 *   **Reddit-Style Sorting**: Sort global and search feeds by **New** (creation time), **Top** (highest net vote score), or **Hot** (using a decay-ranking algorithm in `rankingService.js`).
 *   **Nested Discussion Threads**: Supports O(N) recursive thread mapping on the backend, allowing users to comment and reply to replies infinitely.
 *   **Moderation Panel**: A dashboard for admin-role users to review flagged posts and comments, resolved by dismissing reports or removing content.
+*   **Interactive Swagger Documentation**: Built-in OpenAPI 3.0 specification with Swagger UI interface at `/api-docs` for in-browser API testing and schema inspection.
 
 ---
 
 ## 🛠 Tech Stack
 
 *   **Frontend**: React (Vite), React Router, Tailwind CSS, Axios, Lucide Icons
-*   **Backend**: Node.js, Express.js, REST API, Mongoose, JWT, bcryptjs, Helmet, CORS
+*   **Backend**: Node.js, Express.js, REST API, Mongoose, JWT, bcryptjs, Helmet, CORS, **Swagger UI (`swagger-ui-express`, `swagger-jsdoc`)**
 *   **Database**: MongoDB, MongoDB Atlas (with `2dsphere` spatial and `text` content indices)
 *   **Security**: express-rate-limit, Helmet headers, request limits, CORS rules, coordinate masking
 
@@ -47,11 +48,11 @@ ghostpost/
 │
 ├── server/                     # Node.js + Express Backend
 │   ├── src/
-│   │   ├── config/             # DB connection configuration
+│   │   ├── config/             # DB connection configuration & Swagger OpenAPI spec
 │   │   ├── controllers/        # Controllers (Auth, Post, Comment, Report)
 │   │   ├── middleware/         # Middlewares (Auth, RateLimiter, ErrorHandler)
 │   │   ├── models/             # Mongoose schemas (User, Post, Comment, Vote, Report)
-│   │   ├── routes/             # REST route maps
+│   │   ├── routes/             # REST route maps (OpenAPI annotated)
 │   │   ├── services/           # RankingService, Geolocation PrivacyService
 │   │   └── utils/              # JWT, identity, and seeder utilities
 │   ├── tests/                  # Integration tests (Jest & Supertest)
@@ -62,7 +63,7 @@ ghostpost/
 
 ## ⚙️ Environment Variables
 
-Create [server/.env](file:///c:/Users/tarsh/Desktop/Training/GhostPost/server/.env) from the provided [server/.env.example](file:///c:/Users/tarsh/Desktop/Training/GhostPost/server/.env.example):
+Create `server/.env` from the provided `server/.env.example`:
 
 ```env
 PORT=5000
@@ -126,6 +127,15 @@ npm run test
 
 ---
 
+## 📚 Interactive API Documentation (Swagger)
+
+Once the backend Express server is running on port `5000`, open your browser to access the live Swagger UI:
+
+* **Interactive Swagger UI**: [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
+* **Raw OpenAPI 3.0 Spec**: [http://localhost:5000/api-docs.json](http://localhost:5000/api-docs.json)
+
+---
+
 ## 📍 Geolocation & Privacy Implementation
 
 > [!IMPORTANT]
@@ -145,20 +155,33 @@ npm run test
 
 ## 📖 REST API Reference
 
+*(For full request/response payload schemas and live endpoint testing, visit `/api-docs`)*
+
 ### Session Auth
-*   `POST /api/auth/session` — Create session (takes optional `token` in body to restore identity).
-*   `POST /api/auth/refresh` — Refresh expired JWT token.
-*   `POST /api/auth/logout` — Logout stateless session.
+*   `POST /api/auth/register` — Register a new account.
+*   `POST /api/auth/login` — Login user account.
+*   `POST /api/auth/refresh` — Refresh expired JWT access token.
+*   `POST /api/auth/logout` — Logout session.
 
 ### Users
 *   `GET /api/users/me` — Retrieve active profile.
+*   `PATCH /api/users/me` — Update display name.
+*   `PATCH /api/users/me/password` — Change account password.
 *   `PATCH /api/users/me/home` — Set/update Home coordinates (`{ latitude, longitude }`).
 *   `DELETE /api/users/me/home` — Delete Home coordinates.
+*   `GET /api/users/me/bookmarks` — Get bookmarked posts.
+*   `POST /api/users/me/bookmarks/:postId` — Bookmark a post.
+*   `DELETE /api/users/me/bookmarks/:postId` — Remove post bookmark.
+*   `POST /api/users/:id/follow` — Follow a handle.
+*   `POST /api/users/:id/unfollow` — Unfollow a handle.
+*   `GET /api/users/:username` — Public profile details.
 
 ### Feed & Posts
 *   `GET /api/posts/global?sort=hot` — Global Feed (cursor-paginated).
 *   `GET /api/posts/nearby?lat=xx&lng=xx&radius=10` — Nearby Feed (radius: 1, 5, 10, 25).
 *   `GET /api/posts/home` — Home feed (uses saved user home coords).
+*   `GET /api/posts/following` — Following feed.
+*   `GET /api/posts/search?q=query` — Full-text post search.
 *   `POST /api/posts` — Publish post (accepts optional `latitude, longitude` to tag location).
 *   `GET /api/posts/:id` — Single post details.
 *   `DELETE /api/posts/:id` — Delete post (author or admin only).
@@ -168,9 +191,10 @@ npm run test
 ### Comments
 *   `GET /api/posts/:id/comments` — Load comment tree (structured hierarchy).
 *   `POST /api/posts/:id/comments` — Create comment/reply.
-*   `DELETE /api/comments/:id` — Delete comment (converts to `[Deleted]` if replies exist).
+*   `DELETE /api/comments/:id` — Delete comment.
+*   `POST /api/comments/:id/vote` — Upvote/Downvote comment (`{ value: 1 or -1 }`).
 
 ### Moderation
 *   `POST /api/reports` — Report post or comment.
 *   `GET /api/admin/reports` — View reported content flags (Admin only).
-*   `PATCH /api/admin/reports/:id` — Update report status (`{ status: 'resolved', action: 'remove' }` - Admin only).
+*   `PATCH /api/admin/reports/:id` — Resolve or dismiss report (Admin only).

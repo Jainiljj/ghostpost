@@ -350,4 +350,22 @@ describe('GhostPost Full-Stack API Integration Tests', () => {
     });
   });
 
+  describe('Swagger OpenAPI Documentation', () => {
+    test('should serve Swagger UI at /api-docs/', async () => {
+      const res = await request(app).get('/api-docs/');
+      expect(res.statusCode).toBe(200);
+      expect(res.text).toContain('swagger-ui');
+    });
+
+    test('should return raw JSON OpenAPI specification at /api-docs.json', async () => {
+      const res = await request(app).get('/api-docs.json');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.openapi).toBe('3.0.0');
+      expect(res.body.info.title).toBe('GhostPost REST API');
+      expect(res.body.paths).toHaveProperty('/api/posts/global');
+      expect(res.body.paths).toHaveProperty('/api/auth/login');
+    });
+  });
+
 });
+

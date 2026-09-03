@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
 
+const swaggerSpec = require('./config/swagger');
 const AppError = require('./utils/AppError');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -16,8 +18,12 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
-// Security Middlewares
-app.use(helmet());
+// Security Middlewares - Permitting Swagger UI inline scripts & styles
+app.use(
+  helmet({
+    contentSecurityPolicy: false
+  })
+);
 
 // Configure CORS for production/development
 const allowedOrigins = [
@@ -27,7 +33,7 @@ const allowedOrigins = [
 ];
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. curl, mobile apps)
+    // Allow requests with no origin (e.g. curl, mobile apps, swagger ui)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -55,6 +61,18 @@ app.get('/api/health', (req, res) => {
     message: 'GhostPost API is running smoothly',
     timestamp: new Date()
   });
+});
+
+// Root route redirect to Swagger UI documentation
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
+// Swagger Interactive API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // API Routes mounting
