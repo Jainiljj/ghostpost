@@ -13,6 +13,14 @@ const options = {
     },
     servers: [
       {
+        url: '/',
+        description: 'Current Server (Production / Local)'
+      },
+      {
+        url: 'https://ghostpost-alpha.vercel.app',
+        description: 'Vercel Production Server'
+      },
+      {
         url: 'http://localhost:5000',
         description: 'Local Development Server'
       }
