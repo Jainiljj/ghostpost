@@ -1,3 +1,4 @@
+const path = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
@@ -132,7 +133,11 @@ const options = {
       { name: 'Admin', description: 'Moderation dashboard and report resolution (Admin role required)' }
     ]
   },
-  apis: ['./src/routes/*.js']
+  apis: [
+    path.join(__dirname, '../routes/*.js').replace(/\\/g, '/'),
+    './server/src/routes/*.js',
+    './src/routes/*.js'
+  ]
 };
 
 const swaggerSpec = swaggerJsdoc(options);
