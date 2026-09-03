@@ -62,8 +62,21 @@ const commentsData = [
 const seedDB = async () => {
   try {
     const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ghostpost';
-    await mongoose.connect(mongoUri);
-    console.log('Connected to MongoDB for seeding...');
+    if (mongoUri.startsWith('mongodb+srv://')) {
+      try {
+        require('dns').setServers(['8.8.8.8', '1.1.1.1']);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    try {
+      await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
+      console.log('Connected to MongoDB for seeding...');
+    } catch (connErr) {
+      console.warn(`Could not connect to primary DB (${connErr.message}). Using local MongoDB...`);
+      await mongoose.connect('mongodb://127.0.0.1:27017/ghostpost');
+      console.log('Connected to local MongoDB for seeding...');
+    }
 
     // Clear existing data
     await User.deleteMany({});
