@@ -3,6 +3,10 @@
   "outputDirectory": "client/dist",
   "rewrites": [
     {
+      "source": "/api-docs.json",
+      "destination": "/api"
+    },
+    {
       "source": "/api-docs(.*)",
       "destination": "/api"
     },
